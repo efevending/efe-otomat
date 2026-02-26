@@ -1,0 +1,11 @@
+{
+  "name": "efe-otomat",
+  "version": "1.0.0",
+  "description": "Efe Otomat - Akıllı Otomat Yönetim Sistemi",
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../web && npm install",
+    "build": "cd web && npm run build",
+    "start": "cd backend && npm start",
+    "seed": "cd backend && npm run seed"
+  }
+}
