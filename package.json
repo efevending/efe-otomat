@@ -2,6 +2,9 @@
   "name": "efe-otomat",
   "version": "1.0.0",
   "description": "Efe Otomat - Akıllı Otomat Yönetim Sistemi",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "install:all": "cd backend && npm install && cd ../web && npm install",
     "build": "cd web && npm run build",
