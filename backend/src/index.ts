@@ -17,6 +17,7 @@ import reportRoutes from './routes/reports.routes';
 import firmRoutes from './routes/firms.routes';
 import priceRoutes from './routes/prices.routes';
 import supplierRoutes from './routes/suppliers.routes';
+import vehicleRoutes from './routes/vehicles.routes';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -42,6 +43,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/firms', firmRoutes);
 app.use('/api/prices', priceRoutes);
 app.use('/api/suppliers', supplierRoutes);
+app.use('/api/vehicles', vehicleRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

@@ -241,6 +241,16 @@ export function initializeDatabase() {
       PRIMARY KEY (user_id, otomat_group_id)
     );
 
+    -- Araçlar
+    CREATE TABLE IF NOT EXISTS vehicles (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plate TEXT NOT NULL,
+      driver_name TEXT DEFAULT '',
+      notes TEXT DEFAULT '',
+      active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    );
+
     -- Tedarikçiler
     CREATE TABLE IF NOT EXISTS suppliers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -361,6 +371,7 @@ export function initializeDatabase() {
   if (!whColNames.includes('supplier_id')) db.exec("ALTER TABLE warehouses ADD COLUMN supplier_id INTEGER REFERENCES suppliers(id)");
   if (!whColNames.includes('special_code')) db.exec("ALTER TABLE warehouses ADD COLUMN special_code TEXT DEFAULT ''");
   if (!whColNames.includes('responsible_user_id')) db.exec("ALTER TABLE warehouses ADD COLUMN responsible_user_id INTEGER REFERENCES users(id)");
+  if (!whColNames.includes('vehicle_id')) db.exec("ALTER TABLE warehouses ADD COLUMN vehicle_id INTEGER REFERENCES vehicles(id)");
 
   // Warehouse type constraint'i güncelle (central→sabit, field→sanal, tedarikci ekle)
   try {
