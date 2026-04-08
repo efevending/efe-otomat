@@ -2,20 +2,29 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import MachineList from './pages/machines/MachineList';
-import MachineDetail from './pages/machines/MachineDetail';
-import ProductList from './pages/products/ProductList';
-import LoadingList from './pages/loadings/LoadingList';
-import LoadingDetail from './pages/loadings/LoadingDetail';
-import CountList from './pages/counts/CountList';
-import SalesAnalysis from './pages/counts/SalesAnalysis';
-import WarehouseList from './pages/warehouses/WarehouseList';
-import WarehouseStock from './pages/warehouses/WarehouseStock';
-import TransferList from './pages/transfers/TransferList';
-import RouteList from './pages/routes/RouteList';
-import UserList from './pages/users/UserList';
-import Reports from './pages/reports/Reports';
+
+// Giriş İşlemleri
+import FirmaTanimlama from './pages/giris-islemleri/FirmaTanimlama';
+import PersonelTanimlama from './pages/giris-islemleri/PersonelTanimlama';
+import OtomatTanimlama from './pages/giris-islemleri/OtomatTanimlama';
+import UrunTanimlama from './pages/giris-islemleri/UrunTanimlama';
+import OtomatUrunHaritalari from './pages/giris-islemleri/OtomatUrunHaritalari';
+import UrunFiyatTanimlama from './pages/giris-islemleri/UrunFiyatTanimlama';
+import TedarikciTanimlama from './pages/giris-islemleri/TedarikciTanimlama';
+import DepoTransfer from './pages/giris-islemleri/DepoTransfer';
+import TahsilatGiris from './pages/giris-islemleri/TahsilatGiris';
+
+// Mali Raporlar
+import OtomatHareketleri from './pages/mali-raporlar/OtomatHareketleri';
+import PersonelMesai from './pages/mali-raporlar/PersonelMesai';
+
+// Süreç Yönetim Raporları
+import IadeSikayet from './pages/surec-yonetim/IadeSikayet';
+import DepoRaporlama from './pages/surec-yonetim/DepoRaporlama';
+import MesaiRaporlama from './pages/surec-yonetim/MesaiRaporlama';
+import DepoSayimOnaylama from './pages/surec-yonetim/DepoSayimOnaylama';
+import SayimTahsilatRaporlama from './pages/surec-yonetim/SayimTahsilatRaporlama';
+import DepoAracTanimlama from './pages/surec-yonetim/DepoAracTanimlama';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -30,22 +39,33 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
+      <Route path="/login" element={user ? <Navigate to="/firma-tanimlama" /> : <Login />} />
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-        <Route index element={<Dashboard />} />
-        <Route path="machines" element={<MachineList />} />
-        <Route path="machines/:id" element={<MachineDetail />} />
-        <Route path="products" element={<ProductList />} />
-        <Route path="loadings" element={<LoadingList />} />
-        <Route path="loadings/:id" element={<LoadingDetail />} />
-        <Route path="counts" element={<CountList />} />
-        <Route path="counts/:id/sales" element={<SalesAnalysis />} />
-        <Route path="warehouses" element={<WarehouseList />} />
-        <Route path="warehouses/:id/stock" element={<WarehouseStock />} />
-        <Route path="transfers" element={<TransferList />} />
-        <Route path="routes" element={<RouteList />} />
-        <Route path="users" element={<UserList />} />
-        <Route path="reports" element={<Reports />} />
+        {/* Varsayılan sayfa */}
+        <Route index element={<Navigate to="/firma-tanimlama" replace />} />
+
+        {/* Giriş İşlemleri */}
+        <Route path="firma-tanimlama" element={<FirmaTanimlama />} />
+        <Route path="personel-tanimlama" element={<PersonelTanimlama />} />
+        <Route path="otomat-tanimlama" element={<OtomatTanimlama />} />
+        <Route path="urun-tanimlama" element={<UrunTanimlama />} />
+        <Route path="otomat-urun-haritalari" element={<OtomatUrunHaritalari />} />
+        <Route path="urun-fiyat-tanimlama" element={<UrunFiyatTanimlama />} />
+        <Route path="tedarikci-tanimlama" element={<TedarikciTanimlama />} />
+        <Route path="depo-transfer" element={<DepoTransfer />} />
+        <Route path="tahsilat-giris" element={<TahsilatGiris />} />
+
+        {/* Mali Raporlar */}
+        <Route path="otomat-hareketleri" element={<OtomatHareketleri />} />
+        <Route path="personel-mesai" element={<PersonelMesai />} />
+
+        {/* Süreç Yönetim Raporları */}
+        <Route path="iade-sikayet" element={<IadeSikayet />} />
+        <Route path="depo-raporlama" element={<DepoRaporlama />} />
+        <Route path="mesai-raporlama" element={<MesaiRaporlama />} />
+        <Route path="depo-sayim-onaylama" element={<DepoSayimOnaylama />} />
+        <Route path="sayim-tahsilat-raporlama" element={<SayimTahsilatRaporlama />} />
+        <Route path="depo-arac-tanimlama" element={<DepoAracTanimlama />} />
       </Route>
     </Routes>
   );
