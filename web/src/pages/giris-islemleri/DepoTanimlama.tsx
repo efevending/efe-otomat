@@ -20,7 +20,6 @@ interface User {
 const DEPO_TYPES = [
   { value: 'sanal', label: 'HAREKETLİ DEPO (ARAÇ)' },
   { value: 'sabit', label: 'SABİT DEPO' },
-  { value: 'tedarikci', label: 'TEDARİKÇİ' },
 ];
 
 const typeLabel = (type: string) => DEPO_TYPES.find(d => d.value === type)?.label || type;
@@ -110,6 +109,7 @@ export default function DepoTanimlama() {
   };
 
   const filteredWarehouses = warehouses.filter(w => {
+    if (w.type === 'tedarikci') return false;
     if (filters.name && !w.name.toLowerCase().includes(filters.name.toLowerCase())) return false;
     if (filters.special_code && !(w.special_code || '').toLowerCase().includes(filters.special_code.toLowerCase())) return false;
     if (filters.type && !typeLabel(w.type).toLowerCase().includes(filters.type.toLowerCase())) return false;
