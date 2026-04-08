@@ -202,6 +202,24 @@ export function initializeDatabase() {
       name TEXT NOT NULL UNIQUE
     );
 
+    -- Ürün Türleri
+    CREATE TABLE IF NOT EXISTS product_types (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE
+    );
+
+    -- Ürün Markaları
+    CREATE TABLE IF NOT EXISTS product_brands (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE
+    );
+
+    -- Ürün Çeşitleri
+    CREATE TABLE IF NOT EXISTS product_varieties (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE
+    );
+
     -- İçecek Grupları
     CREATE TABLE IF NOT EXISTS drink_groups (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -268,6 +286,25 @@ export function initializeDatabase() {
   if (!machColNames.includes('otomat_group_id')) db.exec("ALTER TABLE machines ADD COLUMN otomat_group_id INTEGER REFERENCES otomat_groups(id)");
   if (!machColNames.includes('yandolap_depo')) db.exec("ALTER TABLE machines ADD COLUMN yandolap_depo TEXT DEFAULT ''");
   if (!machColNames.includes('dia_depo')) db.exec("ALTER TABLE machines ADD COLUMN dia_depo TEXT DEFAULT ''");
+
+  // Products tablosuna yeni alanlar ekle
+  const prodColumns = db.prepare("PRAGMA table_info(products)").all() as any[];
+  const prodColNames = prodColumns.map((c: any) => c.name);
+  if (!prodColNames.includes('short_name')) db.exec("ALTER TABLE products ADD COLUMN short_name TEXT DEFAULT ''");
+  if (!prodColNames.includes('product_type_id')) db.exec("ALTER TABLE products ADD COLUMN product_type_id INTEGER REFERENCES product_types(id)");
+  if (!prodColNames.includes('brand_id')) db.exec("ALTER TABLE products ADD COLUMN brand_id INTEGER REFERENCES product_brands(id)");
+  if (!prodColNames.includes('variety_id')) db.exec("ALTER TABLE products ADD COLUMN variety_id INTEGER REFERENCES product_varieties(id)");
+  if (!prodColNames.includes('unit_type')) db.exec("ALTER TABLE products ADD COLUMN unit_type TEXT DEFAULT 'GRAM'");
+  if (!prodColNames.includes('unit_value')) db.exec("ALTER TABLE products ADD COLUMN unit_value TEXT DEFAULT ''");
+  if (!prodColNames.includes('kdv_rate')) db.exec("ALTER TABLE products ADD COLUMN kdv_rate REAL DEFAULT 0");
+  if (!prodColNames.includes('default_unit')) db.exec("ALTER TABLE products ADD COLUMN default_unit TEXT DEFAULT ''");
+  if (!prodColNames.includes('shelf_life')) db.exec("ALTER TABLE products ADD COLUMN shelf_life TEXT DEFAULT ''");
+  if (!prodColNames.includes('box_barcode')) db.exec("ALTER TABLE products ADD COLUMN box_barcode TEXT DEFAULT ''");
+  if (!prodColNames.includes('case_barcode')) db.exec("ALTER TABLE products ADD COLUMN case_barcode TEXT DEFAULT ''");
+  if (!prodColNames.includes('case_quantity')) db.exec("ALTER TABLE products ADD COLUMN case_quantity INTEGER DEFAULT 1");
+  if (!prodColNames.includes('box_quantity')) db.exec("ALTER TABLE products ADD COLUMN box_quantity INTEGER DEFAULT 1");
+  if (!prodColNames.includes('stock_no')) db.exec("ALTER TABLE products ADD COLUMN stock_no TEXT DEFAULT ''");
+  if (!prodColNames.includes('default_spiral_capacity')) db.exec("ALTER TABLE products ADD COLUMN default_spiral_capacity INTEGER DEFAULT 8");
 
   console.log('Veritabanı tabloları oluşturuldu.');
 
