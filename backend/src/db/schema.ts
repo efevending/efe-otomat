@@ -184,6 +184,30 @@ export function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_firms_group ON firms(firma_group_id);
     CREATE INDEX IF NOT EXISTS idx_firms_type ON firms(firma_type_id);
 
+    -- Otomat Modelleri
+    CREATE TABLE IF NOT EXISTS otomat_models (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE
+    );
+
+    -- Otomat Bölgeleri
+    CREATE TABLE IF NOT EXISTS otomat_regions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE
+    );
+
+    -- Otomat Tipleri
+    CREATE TABLE IF NOT EXISTS otomat_types (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE
+    );
+
+    -- İçecek Grupları
+    CREATE TABLE IF NOT EXISTS drink_groups (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE
+    );
+
     -- Otomat Grupları (Bölgeler)
     CREATE TABLE IF NOT EXISTS otomat_groups (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -224,6 +248,26 @@ export function initializeDatabase() {
   if (!colNames.includes('shift_start')) db.exec("ALTER TABLE users ADD COLUMN shift_start TEXT DEFAULT '08:00'");
   if (!colNames.includes('shift_end')) db.exec("ALTER TABLE users ADD COLUMN shift_end TEXT DEFAULT '17:00'");
   if (!colNames.includes('warehouse_id')) db.exec("ALTER TABLE users ADD COLUMN warehouse_id INTEGER REFERENCES warehouses(id)");
+
+  // Machines tablosuna yeni alanlar ekle
+  const machineColumns = db.prepare("PRAGMA table_info(machines)").all() as any[];
+  const machColNames = machineColumns.map((c: any) => c.name);
+  if (!machColNames.includes('serial_no')) db.exec("ALTER TABLE machines ADD COLUMN serial_no TEXT DEFAULT ''");
+  if (!machColNames.includes('firm_id')) db.exec("ALTER TABLE machines ADD COLUMN firm_id INTEGER REFERENCES firms(id)");
+  if (!machColNames.includes('otomat_model_id')) db.exec("ALTER TABLE machines ADD COLUMN otomat_model_id INTEGER REFERENCES otomat_models(id)");
+  if (!machColNames.includes('otomat_region_id')) db.exec("ALTER TABLE machines ADD COLUMN otomat_region_id INTEGER REFERENCES otomat_regions(id)");
+  if (!machColNames.includes('otomat_type_id')) db.exec("ALTER TABLE machines ADD COLUMN otomat_type_id INTEGER REFERENCES otomat_types(id)");
+  if (!machColNames.includes('address')) db.exec("ALTER TABLE machines ADD COLUMN address TEXT DEFAULT ''");
+  if (!machColNames.includes('sales_quota')) db.exec("ALTER TABLE machines ADD COLUMN sales_quota REAL DEFAULT 1");
+  if (!machColNames.includes('responsible_user_id')) db.exec("ALTER TABLE machines ADD COLUMN responsible_user_id INTEGER REFERENCES users(id)");
+  if (!machColNames.includes('is_filling')) db.exec("ALTER TABLE machines ADD COLUMN is_filling INTEGER DEFAULT 1");
+  if (!machColNames.includes('credit_card')) db.exec("ALTER TABLE machines ADD COLUMN credit_card INTEGER DEFAULT 0");
+  if (!machColNames.includes('cup_capacity_1')) db.exec("ALTER TABLE machines ADD COLUMN cup_capacity_1 INTEGER DEFAULT 0");
+  if (!machColNames.includes('cup_capacity_2')) db.exec("ALTER TABLE machines ADD COLUMN cup_capacity_2 INTEGER DEFAULT 0");
+  if (!machColNames.includes('drink_group_id')) db.exec("ALTER TABLE machines ADD COLUMN drink_group_id INTEGER REFERENCES drink_groups(id)");
+  if (!machColNames.includes('otomat_group_id')) db.exec("ALTER TABLE machines ADD COLUMN otomat_group_id INTEGER REFERENCES otomat_groups(id)");
+  if (!machColNames.includes('yandolap_depo')) db.exec("ALTER TABLE machines ADD COLUMN yandolap_depo TEXT DEFAULT ''");
+  if (!machColNames.includes('dia_depo')) db.exec("ALTER TABLE machines ADD COLUMN dia_depo TEXT DEFAULT ''");
 
   console.log('Veritabanı tabloları oluşturuldu.');
 
