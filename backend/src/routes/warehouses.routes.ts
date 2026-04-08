@@ -4,27 +4,39 @@ import { authenticateToken } from '../middleware/auth';
 import { requireRole } from '../middleware/roleCheck';
 
 const router = Router();
+router.use(authenticateToken);
 
-router.get('/', authenticateToken, (req: Request, res: Response) => {
-  const warehouses = db.prepare(`
-    SELECT w.*, u.full_name as manager_name
-    FROM warehouses w LEFT JOIN users u ON w.manager_id = u.id
-    ORDER BY w.type, w.name
-  `).all();
-  res.json(warehouses);
+// Tüm depoları getir (tip filtresi opsiyonel)
+router.get('/', (req: Request, res: Response) => {
+  const { type } = req.query;
+  let query = `
+    SELECT w.*, u.full_name as manager_name, s.name as supplier_name
+    FROM warehouses w
+    LEFT JOIN users u ON w.manager_id = u.id
+    LEFT JOIN suppliers s ON w.supplier_id = s.id
+  `;
+  const params: any[] = [];
+  if (type) {
+    query += ' WHERE w.type = ?';
+    params.push(type);
+  }
+  query += ' ORDER BY w.type, w.name';
+  res.json(db.prepare(query).all(...params));
 });
 
-router.get('/:id', authenticateToken, (req: Request, res: Response) => {
+router.get('/:id', (req: Request, res: Response) => {
   const warehouse = db.prepare(`
-    SELECT w.*, u.full_name as manager_name
-    FROM warehouses w LEFT JOIN users u ON w.manager_id = u.id
+    SELECT w.*, u.full_name as manager_name, s.name as supplier_name
+    FROM warehouses w
+    LEFT JOIN users u ON w.manager_id = u.id
+    LEFT JOIN suppliers s ON w.supplier_id = s.id
     WHERE w.id = ?
   `).get(req.params.id);
   if (!warehouse) return res.status(404).json({ error: 'Depo bulunamadı' });
   res.json(warehouse);
 });
 
-router.get('/:id/stock', authenticateToken, (req: Request, res: Response) => {
+router.get('/:id/stock', (req: Request, res: Response) => {
   const stock = db.prepare(`
     SELECT ws.*, p.name as product_name, p.barcode, p.category, p.cost_price, p.sale_price
     FROM warehouse_stock ws
@@ -35,7 +47,7 @@ router.get('/:id/stock', authenticateToken, (req: Request, res: Response) => {
   res.json(stock);
 });
 
-router.get('/:id/transactions', authenticateToken, (req: Request, res: Response) => {
+router.get('/:id/transactions', (req: Request, res: Response) => {
   const { start_date, end_date, type } = req.query;
   let query = `
     SELECT wt.*, p.name as product_name, u.full_name as created_by_name
@@ -54,9 +66,9 @@ router.get('/:id/transactions', authenticateToken, (req: Request, res: Response)
   res.json(db.prepare(query).all(...params));
 });
 
-// Depo stok girişi (ürün alımı)
-router.post('/:id/stock-entry', authenticateToken, requireRole('admin', 'warehouse_manager'), (req: Request, res: Response) => {
-  const { items, notes } = req.body; // items: [{ product_id, quantity }]
+// Depo stok girişi
+router.post('/:id/stock-entry', requireRole('admin', 'warehouse_manager'), (req: Request, res: Response) => {
+  const { items, notes } = req.body;
   const warehouseId = req.params.id;
 
   if (!Array.isArray(items) || items.length === 0) {
@@ -65,7 +77,6 @@ router.post('/:id/stock-entry', authenticateToken, requireRole('admin', 'warehou
 
   const transaction = db.transaction(() => {
     for (const item of items) {
-      // Stok güncelle
       const existing = db.prepare('SELECT * FROM warehouse_stock WHERE warehouse_id = ? AND product_id = ?').get(warehouseId, item.product_id) as any;
 
       if (existing) {
@@ -76,7 +87,6 @@ router.post('/:id/stock-entry', authenticateToken, requireRole('admin', 'warehou
           .run(warehouseId, item.product_id, item.quantity);
       }
 
-      // Hareket kaydı
       db.prepare(
         'INSERT INTO warehouse_transactions (warehouse_id, product_id, quantity, type, reference_type, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)'
       ).run(warehouseId, item.product_id, item.quantity, 'in', 'purchase', notes || null, req.user!.id);
@@ -87,8 +97,8 @@ router.post('/:id/stock-entry', authenticateToken, requireRole('admin', 'warehou
   res.json({ message: 'Stok girişi yapıldı' });
 });
 
-// Depo stok çıkışı (ayarlama)
-router.post('/:id/stock-exit', authenticateToken, requireRole('admin', 'warehouse_manager'), (req: Request, res: Response) => {
+// Depo stok çıkışı
+router.post('/:id/stock-exit', requireRole('admin', 'warehouse_manager'), (req: Request, res: Response) => {
   const { items, notes } = req.body;
   const warehouseId = req.params.id;
 
@@ -111,25 +121,42 @@ router.post('/:id/stock-exit', authenticateToken, requireRole('admin', 'warehous
   res.json({ message: 'Stok çıkışı yapıldı' });
 });
 
-router.post('/', authenticateToken, requireRole('admin'), (req: Request, res: Response) => {
-  const { name, type, address, manager_id } = req.body;
+// Depo oluştur
+router.post('/', requireRole('admin'), (req: Request, res: Response) => {
+  const { name, type, address, manager_id, supplier_id } = req.body;
   if (!name || !type) return res.status(400).json({ error: 'Depo adı ve tipi gerekli' });
 
-  const result = db.prepare('INSERT INTO warehouses (name, type, address, manager_id) VALUES (?, ?, ?, ?)')
-    .run(name, type, address || null, manager_id || null);
+  const result = db.prepare('INSERT INTO warehouses (name, type, address, manager_id, supplier_id) VALUES (?, ?, ?, ?, ?)')
+    .run(name, type, address || null, manager_id || null, supplier_id || null);
 
   res.status(201).json({ id: result.lastInsertRowid, name, type });
 });
 
-router.put('/:id', authenticateToken, requireRole('admin'), (req: Request, res: Response) => {
-  const { name, type, address, manager_id } = req.body;
+// Depo güncelle
+router.put('/:id', requireRole('admin'), (req: Request, res: Response) => {
+  const { name, type, address, manager_id, supplier_id } = req.body;
   const warehouse = db.prepare('SELECT * FROM warehouses WHERE id = ?').get(req.params.id) as any;
   if (!warehouse) return res.status(404).json({ error: 'Depo bulunamadı' });
 
-  db.prepare('UPDATE warehouses SET name = ?, type = ?, address = ?, manager_id = ? WHERE id = ?')
-    .run(name ?? warehouse.name, type ?? warehouse.type, address ?? warehouse.address, manager_id ?? warehouse.manager_id, req.params.id);
+  db.prepare('UPDATE warehouses SET name = ?, type = ?, address = ?, manager_id = ?, supplier_id = ? WHERE id = ?')
+    .run(name ?? warehouse.name, type ?? warehouse.type, address ?? warehouse.address, manager_id ?? warehouse.manager_id, supplier_id ?? warehouse.supplier_id, req.params.id);
 
   res.json({ message: 'Depo güncellendi' });
+});
+
+// Depo sil
+router.delete('/:id', requireRole('admin'), (req: Request, res: Response) => {
+  const warehouse = db.prepare('SELECT * FROM warehouses WHERE id = ?').get(req.params.id) as any;
+  if (!warehouse) return res.status(404).json({ error: 'Depo bulunamadı' });
+
+  // Stok var mı kontrol et
+  const stockCount = db.prepare('SELECT COUNT(*) as count FROM warehouse_stock WHERE warehouse_id = ? AND quantity > 0').get(req.params.id) as any;
+  if (stockCount.count > 0) {
+    return res.status(400).json({ error: 'Stoku olan depo silinemez' });
+  }
+
+  db.prepare('DELETE FROM warehouses WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
 });
 
 export default router;

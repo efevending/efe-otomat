@@ -4,12 +4,15 @@ import { authenticateToken } from '../middleware/auth';
 import { requireRole } from '../middleware/roleCheck';
 
 const router = Router();
+router.use(authenticateToken);
 
-router.get('/', authenticateToken, (req: Request, res: Response) => {
+// Tüm transferleri getir
+router.get('/', (req: Request, res: Response) => {
   const { status } = req.query;
   let query = `
     SELECT t.*,
-      fw.name as from_warehouse_name, tw.name as to_warehouse_name,
+      fw.name as from_warehouse_name, fw.type as from_warehouse_type,
+      tw.name as to_warehouse_name, tw.type as to_warehouse_type,
       ru.full_name as requested_by_name, au.full_name as approved_by_name
     FROM transfers t
     JOIN warehouses fw ON t.from_warehouse_id = fw.id
@@ -27,10 +30,12 @@ router.get('/', authenticateToken, (req: Request, res: Response) => {
   res.json(transfers);
 });
 
-router.get('/:id', authenticateToken, (req: Request, res: Response) => {
+// Transfer detayı
+router.get('/:id', (req: Request, res: Response) => {
   const transfer = db.prepare(`
     SELECT t.*,
-      fw.name as from_warehouse_name, tw.name as to_warehouse_name,
+      fw.name as from_warehouse_name, fw.type as from_warehouse_type,
+      tw.name as to_warehouse_name, tw.type as to_warehouse_type,
       ru.full_name as requested_by_name, au.full_name as approved_by_name
     FROM transfers t
     JOIN warehouses fw ON t.from_warehouse_id = fw.id
@@ -51,11 +56,16 @@ router.get('/:id', authenticateToken, (req: Request, res: Response) => {
   res.json({ ...transfer as any, items });
 });
 
-router.post('/', authenticateToken, requireRole('admin', 'warehouse_manager'), (req: Request, res: Response) => {
+// Transfer oluştur
+router.post('/', requireRole('admin', 'warehouse_manager'), (req: Request, res: Response) => {
   const { from_warehouse_id, to_warehouse_id, items, notes } = req.body;
 
   if (!from_warehouse_id || !to_warehouse_id || !items?.length) {
     return res.status(400).json({ error: 'Kaynak depo, hedef depo ve ürünler gerekli' });
+  }
+
+  if (from_warehouse_id === to_warehouse_id) {
+    return res.status(400).json({ error: 'Kaynak ve hedef depo aynı olamaz' });
   }
 
   const transaction = db.transaction(() => {
@@ -77,7 +87,8 @@ router.post('/', authenticateToken, requireRole('admin', 'warehouse_manager'), (
   res.status(201).json({ id: transferId, message: 'Transfer talebi oluşturuldu' });
 });
 
-router.post('/:id/approve', authenticateToken, requireRole('admin'), (req: Request, res: Response) => {
+// Transfer onayla
+router.post('/:id/approve', requireRole('admin'), (req: Request, res: Response) => {
   const transfer = db.prepare('SELECT * FROM transfers WHERE id = ?').get(req.params.id) as any;
   if (!transfer) return res.status(404).json({ error: 'Transfer bulunamadı' });
   if (transfer.status !== 'pending') return res.status(400).json({ error: 'Transfer zaten işlenmiş' });
@@ -89,7 +100,8 @@ router.post('/:id/approve', authenticateToken, requireRole('admin'), (req: Reque
   res.json({ message: 'Transfer onaylandı' });
 });
 
-router.post('/:id/reject', authenticateToken, requireRole('admin'), (req: Request, res: Response) => {
+// Transfer reddet
+router.post('/:id/reject', requireRole('admin'), (req: Request, res: Response) => {
   const transfer = db.prepare('SELECT * FROM transfers WHERE id = ?').get(req.params.id) as any;
   if (!transfer) return res.status(404).json({ error: 'Transfer bulunamadı' });
   if (transfer.status !== 'pending') return res.status(400).json({ error: 'Transfer zaten işlenmiş' });
@@ -101,7 +113,8 @@ router.post('/:id/reject', authenticateToken, requireRole('admin'), (req: Reques
   res.json({ message: 'Transfer reddedildi' });
 });
 
-router.post('/:id/complete', authenticateToken, requireRole('admin', 'warehouse_manager'), (req: Request, res: Response) => {
+// Transfer tamamla (stokları güncelle)
+router.post('/:id/complete', requireRole('admin', 'warehouse_manager'), (req: Request, res: Response) => {
   const transfer = db.prepare('SELECT * FROM transfers WHERE id = ?').get(req.params.id) as any;
   if (!transfer) return res.status(404).json({ error: 'Transfer bulunamadı' });
   if (transfer.status !== 'approved') return res.status(400).json({ error: 'Transfer önce onaylanmalı' });
@@ -141,6 +154,17 @@ router.post('/:id/complete', authenticateToken, requireRole('admin', 'warehouse_
 
   transaction();
   res.json({ message: 'Transfer tamamlandı, stoklar güncellendi' });
+});
+
+// Transfer sil (sadece pending olanlar)
+router.delete('/:id', requireRole('admin'), (req: Request, res: Response) => {
+  const transfer = db.prepare('SELECT * FROM transfers WHERE id = ?').get(req.params.id) as any;
+  if (!transfer) return res.status(404).json({ error: 'Transfer bulunamadı' });
+  if (transfer.status !== 'pending') return res.status(400).json({ error: 'Sadece bekleyen transferler silinebilir' });
+
+  db.prepare('DELETE FROM transfer_items WHERE transfer_id = ?').run(req.params.id);
+  db.prepare('DELETE FROM transfers WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
 });
 
 export default router;

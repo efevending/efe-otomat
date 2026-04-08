@@ -17,9 +17,10 @@ export function initializeDatabase() {
     CREATE TABLE IF NOT EXISTS warehouses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
-      type TEXT NOT NULL CHECK(type IN ('central', 'field')),
+      type TEXT NOT NULL CHECK(type IN ('sanal', 'sabit', 'tedarikci')),
       address TEXT,
       manager_id INTEGER REFERENCES users(id),
+      supplier_id INTEGER REFERENCES suppliers(id),
       created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
     );
 
@@ -353,6 +354,41 @@ export function initializeDatabase() {
   if (!prodColNames.includes('box_quantity')) db.exec("ALTER TABLE products ADD COLUMN box_quantity INTEGER DEFAULT 1");
   if (!prodColNames.includes('stock_no')) db.exec("ALTER TABLE products ADD COLUMN stock_no TEXT DEFAULT ''");
   if (!prodColNames.includes('default_spiral_capacity')) db.exec("ALTER TABLE products ADD COLUMN default_spiral_capacity INTEGER DEFAULT 8");
+
+  // Warehouses tablosuna supplier_id ekle ve type constraint güncelle
+  const whColumns = db.prepare("PRAGMA table_info(warehouses)").all() as any[];
+  const whColNames = whColumns.map((c: any) => c.name);
+  if (!whColNames.includes('supplier_id')) db.exec("ALTER TABLE warehouses ADD COLUMN supplier_id INTEGER REFERENCES suppliers(id)");
+
+  // Warehouse type constraint'i güncelle (central→sabit, field→sanal, tedarikci ekle)
+  try {
+    const whSchema = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='warehouses'").get() as any;
+    if (whSchema?.sql?.includes("'central', 'field'")) {
+      db.exec("PRAGMA foreign_keys = OFF");
+      db.exec(`
+        CREATE TABLE warehouses_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          type TEXT NOT NULL CHECK(type IN ('sanal', 'sabit', 'tedarikci')),
+          address TEXT,
+          manager_id INTEGER REFERENCES users(id),
+          supplier_id INTEGER REFERENCES suppliers(id),
+          created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+        );
+        INSERT INTO warehouses_new (id, name, type, address, manager_id, created_at)
+          SELECT id, name,
+            CASE type WHEN 'central' THEN 'sabit' WHEN 'field' THEN 'sanal' ELSE type END,
+            address, manager_id, created_at
+          FROM warehouses;
+        DROP TABLE warehouses;
+        ALTER TABLE warehouses_new RENAME TO warehouses;
+      `);
+      db.exec("PRAGMA foreign_keys = ON");
+      console.log('Warehouses tablosu yeni tiplere güncellendi (sanal, sabit, tedarikci)');
+    }
+  } catch (e) {
+    console.log('Warehouse migration atlandı:', e);
+  }
 
   console.log('Veritabanı tabloları oluşturuldu.');
 
