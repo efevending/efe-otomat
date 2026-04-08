@@ -240,6 +240,32 @@ export function initializeDatabase() {
       PRIMARY KEY (user_id, otomat_group_id)
     );
 
+    -- Fiyat Listeleri (şablonlar)
+    CREATE TABLE IF NOT EXISTS price_lists (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    );
+
+    -- Fiyat Listesi Kalemleri
+    CREATE TABLE IF NOT EXISTS price_list_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      price_list_id INTEGER NOT NULL REFERENCES price_lists(id) ON DELETE CASCADE,
+      product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      sale_price REAL NOT NULL DEFAULT 0,
+      UNIQUE(price_list_id, product_id)
+    );
+
+    -- Firma Ürün Fiyatları
+    CREATE TABLE IF NOT EXISTS firm_product_prices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      firm_id INTEGER NOT NULL REFERENCES firms(id) ON DELETE CASCADE,
+      product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      sale_price REAL NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+      UNIQUE(firm_id, product_id)
+    );
+
     -- İndeksler
     CREATE INDEX IF NOT EXISTS idx_machines_warehouse ON machines(warehouse_id);
     CREATE INDEX IF NOT EXISTS idx_machines_status ON machines(status);
@@ -295,6 +321,11 @@ export function initializeDatabase() {
   // Products tablosuna yeni alanlar ekle
   const prodColumns = db.prepare("PRAGMA table_info(products)").all() as any[];
   const prodColNames = prodColumns.map((c: any) => c.name);
+  // Firms tablosuna price_list_name ekle
+  const firmColumns = db.prepare("PRAGMA table_info(firms)").all() as any[];
+  const firmColNames = firmColumns.map((c: any) => c.name);
+  if (!firmColNames.includes('price_list_name')) db.exec("ALTER TABLE firms ADD COLUMN price_list_name TEXT DEFAULT ''");
+
   if (!prodColNames.includes('short_name')) db.exec("ALTER TABLE products ADD COLUMN short_name TEXT DEFAULT ''");
   if (!prodColNames.includes('product_type_id')) db.exec("ALTER TABLE products ADD COLUMN product_type_id INTEGER REFERENCES product_types(id)");
   if (!prodColNames.includes('brand_id')) db.exec("ALTER TABLE products ADD COLUMN brand_id INTEGER REFERENCES product_brands(id)");

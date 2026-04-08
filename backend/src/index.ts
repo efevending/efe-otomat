@@ -15,6 +15,7 @@ import countRoutes from './routes/counts.routes';
 import routeRoutes from './routes/routes.routes';
 import reportRoutes from './routes/reports.routes';
 import firmRoutes from './routes/firms.routes';
+import priceRoutes from './routes/prices.routes';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -38,6 +39,7 @@ app.use('/api/counts', countRoutes);
 app.use('/api/routes', routeRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/firms', firmRoutes);
+app.use('/api/prices', priceRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
