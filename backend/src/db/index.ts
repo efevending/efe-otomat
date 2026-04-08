@@ -10,6 +10,9 @@ if (!dbDir.startsWith('/') || !fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
+console.log(`Veritabanı yolu: ${DB_PATH}`);
+console.log(`DATABASE_PATH env: ${process.env.DATABASE_PATH || '(ayarlanmamış)'}`);
+
 const db = new Database(DB_PATH);
 
 db.pragma('journal_mode = WAL');
