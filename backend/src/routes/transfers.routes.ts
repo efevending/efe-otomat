@@ -30,6 +30,43 @@ router.get('/', (req: Request, res: Response) => {
   res.json(transfers);
 });
 
+// Tamamlanmış transferler (satır bazında, ürün detaylı)
+router.get('/completed-detail', (req: Request, res: Response) => {
+  const { start_date, end_date, type } = req.query;
+  // type: 'transfer' = depo→depo, 'irsaliye' = tedarikçi→depo
+  let query = `
+    SELECT t.id as transfer_id, t.notes as fis_notu, t.created_at as ekleme_tarihi,
+      t.approved_at as onaylama_tarihi, t.completed_at,
+      fw.name as from_warehouse_name, fw.type as from_warehouse_type,
+      tw.name as to_warehouse_name, tw.type as to_warehouse_type,
+      ti.product_id, ti.quantity as adet,
+      p.name as urun_adi, p.cost_price as alis_fiyati, p.barcode,
+      p.category as urun_cesidi,
+      ru.full_name as ekleyen, au.full_name as onaylayan
+    FROM transfers t
+    JOIN transfer_items ti ON ti.transfer_id = t.id
+    JOIN products p ON ti.product_id = p.id
+    JOIN warehouses fw ON t.from_warehouse_id = fw.id
+    JOIN warehouses tw ON t.to_warehouse_id = tw.id
+    JOIN users ru ON t.requested_by = ru.id
+    LEFT JOIN users au ON t.approved_by = au.id
+    WHERE t.status = 'completed'
+  `;
+  const params: any[] = [];
+
+  if (type === 'irsaliye') {
+    query += " AND fw.type = 'tedarikci'";
+  } else if (type === 'transfer') {
+    query += " AND fw.type != 'tedarikci'";
+  }
+
+  if (start_date) { query += ' AND t.created_at >= ?'; params.push(start_date); }
+  if (end_date) { query += ' AND t.created_at <= ?'; params.push(end_date + ' 23:59:59'); }
+
+  query += ' ORDER BY t.created_at DESC';
+  res.json(db.prepare(query).all(...params));
+});
+
 // Transfer detayı
 router.get('/:id', (req: Request, res: Response) => {
   const transfer = db.prepare(`
