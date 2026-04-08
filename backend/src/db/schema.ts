@@ -240,6 +240,18 @@ export function initializeDatabase() {
       PRIMARY KEY (user_id, otomat_group_id)
     );
 
+    -- Tedarikçiler
+    CREATE TABLE IF NOT EXISTS suppliers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      address TEXT DEFAULT '',
+      phone TEXT DEFAULT '',
+      tax_no TEXT DEFAULT '',
+      tax_office TEXT DEFAULT '',
+      notes TEXT DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    );
+
     -- Fiyat Listeleri (şablonlar)
     CREATE TABLE IF NOT EXISTS price_lists (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
