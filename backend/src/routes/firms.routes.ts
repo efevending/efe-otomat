@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import db from '../db/index';
-import { authenticate } from '../middleware/auth';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
-router.use(authenticate);
+router.use(authenticateToken);
 
 // ==================== FİRMA GRUPLARI ====================
 
