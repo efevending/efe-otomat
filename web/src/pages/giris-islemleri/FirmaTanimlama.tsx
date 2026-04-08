@@ -75,18 +75,18 @@ export default function FirmaTanimlama() {
   }, [selectedGroupId]);
 
   const loadGroups = async () => {
-    const res = await api.get('/api/firms/groups');
+    const res = await api.get('/firms/groups');
     setGroups(res.data);
   };
 
   const loadTypes = async () => {
-    const res = await api.get('/api/firms/types');
+    const res = await api.get('/firms/types');
     setTypes(res.data);
   };
 
   const loadFirms = async () => {
     const params = selectedGroupId ? { group_id: selectedGroupId } : {};
-    const res = await api.get('/api/firms', { params });
+    const res = await api.get('/firms', { params });
     setFirms(res.data);
   };
 
@@ -100,7 +100,7 @@ export default function FirmaTanimlama() {
 
   const handleAddGroup = async () => {
     if (!newGroupName.trim()) return;
-    await api.post('/api/firms/groups', { name: newGroupName.trim() });
+    await api.post('/firms/groups', { name: newGroupName.trim() });
     setNewGroupName('');
     setShowGroupAdd(false);
     loadGroups();
@@ -108,7 +108,7 @@ export default function FirmaTanimlama() {
 
   const handleUpdateGroup = async () => {
     if (!selectedGroupId || !editGroupName.trim()) return;
-    await api.put(`/api/firms/groups/${selectedGroupId}`, { name: editGroupName.trim() });
+    await api.put(`/firms/groups/${selectedGroupId}`, { name: editGroupName.trim() });
     loadGroups();
     loadFirms();
   };
@@ -116,7 +116,7 @@ export default function FirmaTanimlama() {
   const handleDeleteGroup = async () => {
     if (!selectedGroupId) return;
     if (!confirm('Bu grubu silmek istediğinize emin misiniz?')) return;
-    await api.delete(`/api/firms/groups/${selectedGroupId}`);
+    await api.delete(`/firms/groups/${selectedGroupId}`);
     setSelectedGroupId(null);
     loadGroups();
     loadFirms();
@@ -149,9 +149,9 @@ export default function FirmaTanimlama() {
   const handleSave = async () => {
     if (!form.firma_adi.trim()) return alert('Firma adı zorunlu');
     if (isNew) {
-      await api.post('/api/firms', form);
+      await api.post('/firms', form);
     } else if (selectedFirm) {
-      await api.put(`/api/firms/${selectedFirm.id}`, form);
+      await api.put(`/firms/${selectedFirm.id}`, form);
     }
     loadFirms();
     handleNewFirm();
@@ -160,21 +160,21 @@ export default function FirmaTanimlama() {
   const handleDelete = async () => {
     if (!selectedFirm) return;
     if (!confirm('Bu firmayı silmek istediğinize emin misiniz?')) return;
-    await api.delete(`/api/firms/${selectedFirm.id}`);
+    await api.delete(`/firms/${selectedFirm.id}`);
     loadFirms();
     handleNewFirm();
   };
 
   const handleAddType = async () => {
     if (!newTypeName.trim()) return;
-    await api.post('/api/firms/types', { name: newTypeName.trim() });
+    await api.post('/firms/types', { name: newTypeName.trim() });
     setNewTypeName('');
     loadTypes();
   };
 
   const handleDeleteType = async (typeId: number) => {
     if (!confirm('Bu firma çeşidini silmek istediğinize emin misiniz?')) return;
-    await api.delete(`/api/firms/types/${typeId}`);
+    await api.delete(`/firms/types/${typeId}`);
     loadTypes();
     loadFirms();
   };
