@@ -287,6 +287,11 @@ export function initializeDatabase() {
   if (!machColNames.includes('yandolap_depo')) db.exec("ALTER TABLE machines ADD COLUMN yandolap_depo TEXT DEFAULT ''");
   if (!machColNames.includes('dia_depo')) db.exec("ALTER TABLE machines ADD COLUMN dia_depo TEXT DEFAULT ''");
 
+  // Product maps tablosuna sale_price ekle
+  const pmColumns = db.prepare("PRAGMA table_info(product_maps)").all() as any[];
+  const pmColNames = pmColumns.map((c: any) => c.name);
+  if (!pmColNames.includes('sale_price')) db.exec("ALTER TABLE product_maps ADD COLUMN sale_price REAL DEFAULT 0");
+
   // Products tablosuna yeni alanlar ekle
   const prodColumns = db.prepare("PRAGMA table_info(products)").all() as any[];
   const prodColNames = prodColumns.map((c: any) => c.name);
