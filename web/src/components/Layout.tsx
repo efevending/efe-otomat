@@ -32,6 +32,7 @@ const menuGroups: MenuGroup[] = [
       { to: '/otomat-urun-haritalari', icon: Map, label: 'Otomat Ürün Haritaları' },
       { to: '/urun-fiyat-tanimlama', icon: Tag, label: 'Ürün Fiyat Tanımlama' },
       { to: '/tedarikci-tanimlama', icon: Truck, label: 'Tedarikçi Tanımlama' },
+      { to: '/depo-tanimlama', icon: Warehouse, label: 'Depo Tanımlama' },
       { to: '/depo-transfer', icon: ArrowLeftRight, label: 'Depo Transfer İşlemleri' },
       { to: '/tahsilat-giris', icon: Banknote, label: 'Tahsilat Giriş' },
     ]

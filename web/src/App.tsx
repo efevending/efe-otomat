@@ -12,6 +12,7 @@ import UrunTanimlama from './pages/giris-islemleri/UrunTanimlama';
 import OtomatUrunHaritalari from './pages/giris-islemleri/OtomatUrunHaritalari';
 import UrunFiyatTanimlama from './pages/giris-islemleri/UrunFiyatTanimlama';
 import TedarikciTanimlama from './pages/giris-islemleri/TedarikciTanimlama';
+import DepoTanimlama from './pages/giris-islemleri/DepoTanimlama';
 import DepoTransfer from './pages/giris-islemleri/DepoTransfer';
 import TahsilatGiris from './pages/giris-islemleri/TahsilatGiris';
 
@@ -53,6 +54,7 @@ function AppRoutes() {
         <Route path="otomat-urun-haritalari" element={<OtomatUrunHaritalari />} />
         <Route path="urun-fiyat-tanimlama" element={<UrunFiyatTanimlama />} />
         <Route path="tedarikci-tanimlama" element={<TedarikciTanimlama />} />
+        <Route path="depo-tanimlama" element={<DepoTanimlama />} />
         <Route path="depo-transfer" element={<DepoTransfer />} />
         <Route path="tahsilat-giris" element={<TahsilatGiris />} />
 

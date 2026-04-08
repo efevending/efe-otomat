@@ -359,6 +359,8 @@ export function initializeDatabase() {
   const whColumns = db.prepare("PRAGMA table_info(warehouses)").all() as any[];
   const whColNames = whColumns.map((c: any) => c.name);
   if (!whColNames.includes('supplier_id')) db.exec("ALTER TABLE warehouses ADD COLUMN supplier_id INTEGER REFERENCES suppliers(id)");
+  if (!whColNames.includes('special_code')) db.exec("ALTER TABLE warehouses ADD COLUMN special_code TEXT DEFAULT ''");
+  if (!whColNames.includes('responsible_user_id')) db.exec("ALTER TABLE warehouses ADD COLUMN responsible_user_id INTEGER REFERENCES users(id)");
 
   // Warehouse type constraint'i güncelle (central→sabit, field→sanal, tedarikci ekle)
   try {

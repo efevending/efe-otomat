@@ -10,10 +10,12 @@ router.use(authenticateToken);
 router.get('/', (req: Request, res: Response) => {
   const { type } = req.query;
   let query = `
-    SELECT w.*, u.full_name as manager_name, s.name as supplier_name
+    SELECT w.*, u.full_name as manager_name, s.name as supplier_name,
+      ru.full_name as responsible_user_name
     FROM warehouses w
     LEFT JOIN users u ON w.manager_id = u.id
     LEFT JOIN suppliers s ON w.supplier_id = s.id
+    LEFT JOIN users ru ON w.responsible_user_id = ru.id
   `;
   const params: any[] = [];
   if (type) {
@@ -123,23 +125,26 @@ router.post('/:id/stock-exit', requireRole('admin', 'warehouse_manager'), (req: 
 
 // Depo oluştur
 router.post('/', requireRole('admin'), (req: Request, res: Response) => {
-  const { name, type, address, manager_id, supplier_id } = req.body;
+  const { name, type, address, manager_id, supplier_id, special_code, responsible_user_id } = req.body;
   if (!name || !type) return res.status(400).json({ error: 'Depo adı ve tipi gerekli' });
 
-  const result = db.prepare('INSERT INTO warehouses (name, type, address, manager_id, supplier_id) VALUES (?, ?, ?, ?, ?)')
-    .run(name, type, address || null, manager_id || null, supplier_id || null);
+  const result = db.prepare('INSERT INTO warehouses (name, type, address, manager_id, supplier_id, special_code, responsible_user_id) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .run(name, type, address || null, manager_id || null, supplier_id || null, special_code || '', responsible_user_id || null);
 
   res.status(201).json({ id: result.lastInsertRowid, name, type });
 });
 
 // Depo güncelle
 router.put('/:id', requireRole('admin'), (req: Request, res: Response) => {
-  const { name, type, address, manager_id, supplier_id } = req.body;
+  const { name, type, address, manager_id, supplier_id, special_code, responsible_user_id } = req.body;
   const warehouse = db.prepare('SELECT * FROM warehouses WHERE id = ?').get(req.params.id) as any;
   if (!warehouse) return res.status(404).json({ error: 'Depo bulunamadı' });
 
-  db.prepare('UPDATE warehouses SET name = ?, type = ?, address = ?, manager_id = ?, supplier_id = ? WHERE id = ?')
-    .run(name ?? warehouse.name, type ?? warehouse.type, address ?? warehouse.address, manager_id ?? warehouse.manager_id, supplier_id ?? warehouse.supplier_id, req.params.id);
+  db.prepare('UPDATE warehouses SET name = ?, type = ?, address = ?, manager_id = ?, supplier_id = ?, special_code = ?, responsible_user_id = ? WHERE id = ?')
+    .run(name ?? warehouse.name, type ?? warehouse.type, address ?? warehouse.address,
+      manager_id ?? warehouse.manager_id, supplier_id ?? warehouse.supplier_id,
+      special_code ?? warehouse.special_code, responsible_user_id ?? warehouse.responsible_user_id,
+      req.params.id);
 
   res.json({ message: 'Depo güncellendi' });
 });
