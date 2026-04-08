@@ -184,6 +184,20 @@ export function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_firms_group ON firms(firma_group_id);
     CREATE INDEX IF NOT EXISTS idx_firms_type ON firms(firma_type_id);
 
+    -- Otomat Grupları (Bölgeler)
+    CREATE TABLE IF NOT EXISTS otomat_groups (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    );
+
+    -- Kullanıcı-Otomat Grubu ilişkisi (çoktan çoğa)
+    CREATE TABLE IF NOT EXISTS user_otomat_groups (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      otomat_group_id INTEGER NOT NULL REFERENCES otomat_groups(id) ON DELETE CASCADE,
+      PRIMARY KEY (user_id, otomat_group_id)
+    );
+
     -- İndeksler
     CREATE INDEX IF NOT EXISTS idx_machines_warehouse ON machines(warehouse_id);
     CREATE INDEX IF NOT EXISTS idx_machines_status ON machines(status);
@@ -199,6 +213,17 @@ export function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_machine_counts_machine ON machine_counts(machine_id);
     CREATE INDEX IF NOT EXISTS idx_machine_counts_date ON machine_counts(count_date);
   `);
+
+  // Kullanıcı tablosuna yeni alanlar ekle (mevcut veritabanları için)
+  const userColumns = db.prepare("PRAGMA table_info(users)").all() as any[];
+  const colNames = userColumns.map((c: any) => c.name);
+  if (!colNames.includes('surname')) db.exec("ALTER TABLE users ADD COLUMN surname TEXT DEFAULT ''");
+  if (!colNames.includes('address')) db.exec("ALTER TABLE users ADD COLUMN address TEXT DEFAULT ''");
+  if (!colNames.includes('salary')) db.exec("ALTER TABLE users ADD COLUMN salary REAL DEFAULT 0");
+  if (!colNames.includes('agi')) db.exec("ALTER TABLE users ADD COLUMN agi REAL DEFAULT 0");
+  if (!colNames.includes('shift_start')) db.exec("ALTER TABLE users ADD COLUMN shift_start TEXT DEFAULT '08:00'");
+  if (!colNames.includes('shift_end')) db.exec("ALTER TABLE users ADD COLUMN shift_end TEXT DEFAULT '17:00'");
+  if (!colNames.includes('warehouse_id')) db.exec("ALTER TABLE users ADD COLUMN warehouse_id INTEGER REFERENCES warehouses(id)");
 
   console.log('Veritabanı tabloları oluşturuldu.');
 
