@@ -412,4 +412,7 @@ export function initializeDatabase() {
     db.prepare('INSERT INTO users (username, full_name, password_hash, role, phone) VALUES (?, ?, ?, ?, ?)').run('admin', 'Yönetici', hash, 'admin', '');
     console.log('Varsayılan admin kullanıcı oluşturuldu (admin / 123456)');
   }
+
+  // Ensure admin user is always active
+  db.prepare('UPDATE users SET active = 1 WHERE username = ?').run('admin');
 }
