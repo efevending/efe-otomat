@@ -150,6 +150,40 @@ export function initializeDatabase() {
       quantity INTEGER NOT NULL DEFAULT 0
     );
 
+    -- Firma Grupları
+    CREATE TABLE IF NOT EXISTS firma_groups (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    );
+
+    -- Firma Çeşitleri
+    CREATE TABLE IF NOT EXISTS firma_types (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    );
+
+    -- Firmalar
+    CREATE TABLE IF NOT EXISTS firms (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      firma_group_id INTEGER REFERENCES firma_groups(id) ON DELETE SET NULL,
+      firma_adi TEXT NOT NULL,
+      unvan TEXT,
+      adres TEXT,
+      telefon TEXT,
+      vergi_no TEXT,
+      firma_type_id INTEGER REFERENCES firma_types(id) ON DELETE SET NULL,
+      fatura_listesi INTEGER NOT NULL DEFAULT 1,
+      otomat_gelir_listesi INTEGER NOT NULL DEFAULT 1,
+      kota_var INTEGER NOT NULL DEFAULT 0,
+      ucret_degisiklik_tarihi TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_firms_group ON firms(firma_group_id);
+    CREATE INDEX IF NOT EXISTS idx_firms_type ON firms(firma_type_id);
+
     -- İndeksler
     CREATE INDEX IF NOT EXISTS idx_machines_warehouse ON machines(warehouse_id);
     CREATE INDEX IF NOT EXISTS idx_machines_status ON machines(status);
