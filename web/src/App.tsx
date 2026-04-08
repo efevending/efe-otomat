@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
 
 // Giriş İşlemleri
 import FirmaTanimlama from './pages/giris-islemleri/FirmaTanimlama';
@@ -39,10 +40,10 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/firma-tanimlama" /> : <Login />} />
+      <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-        {/* Varsayılan sayfa */}
-        <Route index element={<Navigate to="/firma-tanimlama" replace />} />
+        {/* Ana Sayfa */}
+        <Route index element={<Dashboard />} />
 
         {/* Giriş İşlemleri */}
         <Route path="firma-tanimlama" element={<FirmaTanimlama />} />
