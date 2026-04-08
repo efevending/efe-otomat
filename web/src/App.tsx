@@ -16,7 +16,7 @@ import DepoTanimlama from './pages/giris-islemleri/DepoTanimlama';
 import DepoTransfer from './pages/giris-islemleri/DepoTransfer';
 import TahsilatGiris from './pages/giris-islemleri/TahsilatGiris';
 
-// Mali Raporlar
+// Operasyonel Raporlar
 import OtomatHareketleri from './pages/mali-raporlar/OtomatHareketleri';
 import PersonelMesai from './pages/mali-raporlar/PersonelMesai';
 
@@ -58,7 +58,7 @@ function AppRoutes() {
         <Route path="depo-transfer" element={<DepoTransfer />} />
         <Route path="tahsilat-giris" element={<TahsilatGiris />} />
 
-        {/* Mali Raporlar */}
+        {/* Operasyonel Raporlar */}
         <Route path="otomat-hareketleri" element={<OtomatHareketleri />} />
         <Route path="personel-mesai" element={<PersonelMesai />} />
 

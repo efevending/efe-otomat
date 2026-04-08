@@ -12,7 +12,7 @@ const menuSections = [
     count: 9,
   },
   {
-    title: 'Mali Raporlar',
+    title: 'Operasyonel Raporlar',
     icon: BarChart3,
     color: 'bg-emerald-500',
     description: 'Otomat hareketleri ve personel mesai işlemleri',

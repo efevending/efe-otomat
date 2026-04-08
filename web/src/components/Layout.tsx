@@ -38,7 +38,7 @@ const menuGroups: MenuGroup[] = [
     ]
   },
   {
-    label: 'Mali Raporlar',
+    label: 'Operasyonel Raporlar',
     icon: BarChart3,
     items: [
       { to: '/otomat-hareketleri', icon: Monitor, label: 'Otomat Hareketleri' },
